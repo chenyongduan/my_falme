@@ -1,5 +1,6 @@
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:my_flame/game/joypad.dart';
 import 'package:my_flame/game/world_game.dart';
 
 class MainGame extends StatefulWidget {
@@ -17,6 +18,13 @@ class _MainGameState extends State<MainGame> {
     return Scaffold(
       body: Stack(children: [
         GameWidget(game: game),
+        const Align(
+          alignment: Alignment.bottomRight,
+          child: Padding(
+            padding: const EdgeInsets.all(32.0),
+            child: JoyPad(),
+          ),
+        ),
       ]),
     );
   }
