@@ -1,7 +1,11 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:my_flame/constants/player.dart';
 
 class JoyPad extends StatefulWidget {
-  const JoyPad({Key? key}) : super(key: key);
+  final ValueChanged<PlayerDirection>? onDirectionChange;
+
+  const JoyPad({Key? key, this.onDirectionChange}) : super(key: key);
 
   @override
   State<JoyPad> createState() => _JoypadState();
@@ -9,19 +13,46 @@ class JoyPad extends StatefulWidget {
 
 class _JoypadState extends State<JoyPad> {
   Offset delta = Offset.zero;
+  static const double size = 60;
 
   onDragDown(DragDownDetails e) {
-    var localPosition = e.localPosition - const Offset(60, 60);
-    print('onDragDown=$localPosition');
+    onDealDelta(e.localPosition);
   }
 
   onDragUpdate(DragUpdateDetails e) {
-    var localPosition = e.localPosition - const Offset(60, 60);
-    print('onDragUpdate=$localPosition');
+    onDealDelta(e.localPosition);
   }
 
   onDragEnd(DragEndDetails e) {
-    print('onDragEnd=$e');
+    widget.onDirectionChange!(PlayerDirection.none);
+    setState(() {
+      delta = Offset.zero;
+    });
+  }
+
+  PlayerDirection getDirectionByOffset(Offset offset) {
+    PlayerDirection direction = PlayerDirection.none;
+    if (offset.dx < -20) {
+      direction = PlayerDirection.left;
+    } else if (offset.dx > 20) {
+      direction = PlayerDirection.right;
+    } else if (offset.dy < -20) {
+      direction = PlayerDirection.up;
+    } else if (offset.dy > 20) {
+      direction = PlayerDirection.down;
+    }
+    return direction;
+  }
+
+  onDealDelta(Offset offset) {
+    final localPosition = offset - const Offset(size, size);
+    setState(() {
+      delta = Offset.fromDirection(
+        localPosition.direction,
+        min(size / 2, localPosition.distance),
+      );
+    });
+    widget.onDirectionChange!(getDirectionByOffset(localPosition));
   }
 
   @override
@@ -31,23 +62,26 @@ class _JoypadState extends State<JoyPad> {
       onPanUpdate: onDragUpdate,
       onPanEnd: onDragEnd,
       child: Container(
-          width: 120,
-          height: 120,
-          decoration: BoxDecoration(
-            color: const Color(0x88ffffff),
-            borderRadius: BorderRadius.circular(60),
+        width: size * 2,
+        height: size * 2,
+        decoration: BoxDecoration(
+          color: const Color(0x88ffffff),
+          borderRadius: BorderRadius.circular(size),
+        ),
+        child: Center(
+          child: Transform.translate(
+            offset: delta,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: const Color(0xccffffff),
+                borderRadius: BorderRadius.circular(30),
+              ),
+            ),
           ),
-          child: Center(
-              child: Transform.translate(
-                  offset: Offset.fromDirection(100),
-                  child: Container(
-                    width: 60,
-                    height: 60,
-                    decoration: BoxDecoration(
-                      color: const Color(0xccffffff),
-                      borderRadius: BorderRadius.circular(30),
-                    ),
-                  )))),
+        ),
+      ),
     );
   }
 }

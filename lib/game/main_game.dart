@@ -18,11 +18,13 @@ class _MainGameState extends State<MainGame> {
     return Scaffold(
       body: Stack(children: [
         GameWidget(game: game),
-        const Align(
+        Align(
           alignment: Alignment.bottomRight,
           child: Padding(
             padding: const EdgeInsets.all(32.0),
-            child: JoyPad(),
+            child: JoyPad(
+              onDirectionChange: game.onDirectionChange,
+            ),
           ),
         ),
       ]),

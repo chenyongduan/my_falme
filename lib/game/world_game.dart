@@ -22,6 +22,10 @@ class WorldGame extends FlameGame with KeyboardEvents {
         worldBounds: Rect.fromLTRB(0, 0, _worldMap.size.x, _worldMap.size.y));
   }
 
+  void onDirectionChange(PlayerDirection direction) {
+    _player.setDirection(direction);
+  }
+
   @override
   KeyEventResult onKeyEvent(
     RawKeyEvent event,
