@@ -1,13 +1,16 @@
 import 'dart:ui';
 import 'package:flame/components.dart';
+import 'package:flame/geometry.dart';
 import 'package:flame/sprite.dart';
 import 'package:my_flame/constants/player.dart';
+import 'package:my_flame/game/world_collidable.dart';
 
-class Player extends SpriteAnimationComponent with HasGameRef {
-  final _playerSpeed = 400;
+class Player extends SpriteAnimationComponent with HasGameRef, Hitbox, Collidable {
+  final _playerSpeed = 300;
   final _animationSpeed = 0.15;
+  bool _hasCollided = false;
   PlayerDirection _playerDirection = PlayerDirection.none;
-  var worldSize = Vector2(0, 0);
+  PlayerDirection _collisionDirection = PlayerDirection.none;
 
   late SpriteAnimation _runUpAnimation;
   late SpriteAnimation _runDownAnimation;
@@ -15,7 +18,9 @@ class Player extends SpriteAnimationComponent with HasGameRef {
   late SpriteAnimation _runRightAnimation;
   late SpriteAnimation _standingAnimation;
 
-  Player() : super(size: Vector2.all(50.0));
+  Player() : super(size: Vector2.all(50.0)) {
+    addHitbox(HitboxRectangle());
+  }
 
   @override
   Future<void> onLoad() async {
@@ -30,35 +35,47 @@ class Player extends SpriteAnimationComponent with HasGameRef {
     _movePlayer(dt);
   }
 
-  setWorldSize(Vector2 outWorldSize) {
-    worldSize = outWorldSize;
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, Collidable other) {
+    super.onCollision(intersectionPoints, other);
+    if (other is WorldCollidable) {
+      if (!_hasCollided) {
+        _hasCollided = true;
+        _collisionDirection = _playerDirection;
+      }
+    }
+  }
+
+  @override
+  void onCollisionEnd(Collidable other) {
+    _hasCollided = false;
   }
 
   setDirection(PlayerDirection direction) {
     _playerDirection = direction;
   }
 
+  _checkCollided() {
+    return _hasCollided && _collisionDirection == _playerDirection;
+  }
+
   _movePlayer(double delta) {
     if (_playerDirection == PlayerDirection.up) {
+      if (_checkCollided()) return;
       animation = _runUpAnimation;
-      if (position.y > 0) {
-        position.add(Vector2(0, delta * -_playerSpeed));
-      }
+      position.add(Vector2(0, delta * -_playerSpeed));
     } else if (_playerDirection == PlayerDirection.down) {
+      if (_checkCollided()) return;
       animation = _runDownAnimation;
-      if (position.y < worldSize.y - size.y) {
-        position.add(Vector2(0, delta * _playerSpeed));
-      }
+      position.add(Vector2(0, delta * _playerSpeed));
     } else if (_playerDirection == PlayerDirection.left) {
+      if (_checkCollided()) return;
       animation = _runLeftAnimation;
-      if (position.x > 0) {
-        position.add(Vector2(delta * -_playerSpeed, 0));
-      }
+      position.add(Vector2(delta * -_playerSpeed, 0));
     } else if (_playerDirection == PlayerDirection.right) {
+      if (_checkCollided()) return;
       animation = _runRightAnimation;
-      if (position.x < worldSize.x - size.x) {
-        position.add(Vector2(delta * _playerSpeed, 0));
-      }
+      position.add(Vector2(delta * _playerSpeed, 0));
     } else if (_playerDirection == PlayerDirection.none) {
       animation = _standingAnimation;
     }
